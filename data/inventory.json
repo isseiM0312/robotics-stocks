@@ -1,0 +1,171 @@
+{
+  "updated_at": "2026-05-16",
+  "owner": "issei",
+  "source": "robotics/inventory/current_stock.yml",
+  "notes": [
+    "画像ベースで初期登録。POSラベルが読めるものは high、読みにくいものは medium/low。",
+    "数量は写真時点の見た目ベース。実物カウントで後で補正する。"
+  ],
+  "items": [
+    {
+      "id": "ft-mc-002",
+      "category": "robot_kit",
+      "name": "2WD Mini Robot Mobile Platform Kit",
+      "model": "FT-MC-002",
+      "pos_code": "113650",
+      "quantity": 1,
+      "unit": "kit",
+      "status": "unopened_or_partially_opened",
+      "confidence": "high",
+      "notes": ["キット箱ラベルから確認", "内容物は分解済みの可能性あり"]
+    },
+    {
+      "id": "tb6612fng",
+      "category": "driver_ic",
+      "name": "Dual DC Motor Driver IC",
+      "model": "TB6612FNG",
+      "pos_code": "111317",
+      "quantity": 2,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "medium",
+      "notes": ["同一ラベルが2袋見えるため2個推定。実数確認推奨"]
+    },
+    {
+      "id": "switch-pb-2260l",
+      "category": "switch",
+      "name": "トグルスイッチ・オルタネート 6mm角",
+      "model": "PB-2260L",
+      "pos_code": "115968",
+      "quantity": 1,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "switch-tact-114280",
+      "category": "switch",
+      "name": "タクトスイッチ",
+      "model": "unknown",
+      "pos_code": "114280",
+      "quantity": 10,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "medium",
+      "notes": ["ラベルに x10 表記あり。型番詳細は次回確認"]
+    },
+    {
+      "id": "resistor-220",
+      "category": "resistor",
+      "name": "抵抗 220Ω",
+      "model": "CF 1/4W 5%",
+      "value": "220 ohm",
+      "quantity": 100,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "resistor-330",
+      "category": "resistor",
+      "name": "抵抗 330Ω",
+      "model": "CF 1/4W 5%",
+      "value": "330 ohm",
+      "quantity": 100,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "resistor-1k",
+      "category": "resistor",
+      "name": "抵抗 1kΩ",
+      "model": "CF 1/4W 5%",
+      "value": "1 kohm",
+      "quantity": 100,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "resistor-4k7",
+      "category": "resistor",
+      "name": "抵抗 4.7kΩ",
+      "model": "CF 1/4W 5%",
+      "value": "4.7 kohm",
+      "quantity": 100,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "resistor-10k",
+      "category": "resistor",
+      "name": "抵抗 10kΩ",
+      "model": "CF 1/4W 5%",
+      "value": "10 kohm",
+      "pos_code": "125103",
+      "quantity": 100,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "diode-1n4007",
+      "category": "diode",
+      "name": "整流ダイオード 1N4007",
+      "model": "1N4007-E",
+      "pos_code": "108327",
+      "quantity": 20,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "led-blue",
+      "category": "led",
+      "name": "LED 青",
+      "model": "OSB5DL3E34B",
+      "color": "blue",
+      "quantity": 10,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "high"
+    },
+    {
+      "id": "led-red",
+      "category": "led",
+      "name": "LED 赤",
+      "model": "unknown",
+      "pos_code": "114264",
+      "color": "red",
+      "quantity": 10,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "medium",
+      "notes": ["テープ部品で確認。個数・型番は次回確認"]
+    },
+    {
+      "id": "cable-fmf-1x6",
+      "category": "cable",
+      "name": "ピン・ピンジャンパー付きケーブル メス-メス 1x6 15cm",
+      "model": "1x6 / 15cm",
+      "pos_code": "113830",
+      "quantity": 1,
+      "unit": "pcs",
+      "status": "unopened",
+      "confidence": "high"
+    },
+    {
+      "id": "compute-rpi",
+      "category": "compute_board",
+      "name": "Raspberry Pi（ヒートシンク+ファン付き）",
+      "model": "unknown",
+      "quantity": 1,
+      "unit": "pcs",
+      "status": "in_use",
+      "confidence": "medium",
+      "notes": ["写真から見えるが、型番は未確認"]
+    }
+  ]
+}

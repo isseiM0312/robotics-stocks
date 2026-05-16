@@ -1,0 +1,50 @@
+{
+  "updated_at": "2026-05-16",
+  "projects": [
+    {
+      "id": "inverted_pendulum",
+      "name": "倒立振子（2WD）",
+      "summary": "ESP32 + IMU + TB6612FNG + エンコーダ付きモーター で立たせる。",
+      "groups": [
+        {
+          "name": "A. 必須（ないと立てられない）",
+          "items": [
+            { "id": "ip-mcu", "label": "マイコン本体（ESP32 DevKitC 推奨）", "where": "秋月", "note": "Arduino Uno R4 / Pico でも可" },
+            { "id": "ip-imu", "label": "6軸以上のIMU（LSM6DSV16X など）", "where": "秋月", "note": "BNO055 でも可（ただし内蔵姿勢推定はやや学習向きでない）" },
+            { "id": "ip-encoder-motor", "label": "エンコーダ付きギヤードDCモーター ×2", "where": "マルツ/ロボショップ", "note": "FT-MC-002 同梱仕様を要確認" },
+            { "id": "ip-power", "label": "電源（NiMH電池ボックス or 2S LiPo + 充電器）", "where": "秋月", "note": "最初はNiMHが安全" },
+            { "id": "ip-dcdc", "label": "降圧DCDCコンバータ（5V/3.3V）", "where": "秋月" }
+          ]
+        },
+        {
+          "name": "B. ほぼ必須（立てた後の安定化）",
+          "items": [
+            { "id": "ip-iron", "label": "温調はんだごて（40W前後）", "where": "秋月/ホームセンター" },
+            { "id": "ip-solder", "label": "はんだ線（0.6〜0.8mm）", "where": "秋月" },
+            { "id": "ip-flux", "label": "フラックス", "where": "秋月" },
+            { "id": "ip-shrink", "label": "熱収縮チューブ各種", "where": "秋月" },
+            { "id": "ip-stripper", "label": "ワイヤーストリッパー", "where": "ホームセンター" }
+          ]
+        },
+        {
+          "name": "C. デバッグ効率（あると圧倒的に楽）",
+          "items": [
+            { "id": "ip-multimeter", "label": "マルチメータ", "where": "秋月" },
+            { "id": "ip-usbserial", "label": "USB-シリアル変換器（予備）", "where": "秋月" },
+            { "id": "ip-wires", "label": "予備ジャンパ線（オス-オス/オス-メス）", "where": "秋月" },
+            { "id": "ip-driver-spare", "label": "予備モータードライバ", "where": "秋月" },
+            { "id": "ip-oled", "label": "小型OLEDディスプレイ", "where": "秋月" }
+          ]
+        },
+        {
+          "name": "D. 収納・整理",
+          "items": [
+            { "id": "ip-case-clear", "label": "仕切り付き透明パーツケース ×2", "where": "秋月/100均" },
+            { "id": "ip-toolbox", "label": "小型工具箱", "where": "ホームセンター" },
+            { "id": "ip-bags", "label": "ジップ袋＋ラベルシール", "where": "100均" }
+          ]
+        }
+      ]
+    }
+  ]
+}
