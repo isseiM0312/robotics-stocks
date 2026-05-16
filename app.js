@@ -3,6 +3,7 @@
 
   const TODO_KEY = "robotics-stocks.todo.v1";
   const FILTER_KEY = "robotics-stocks.filter.v1";
+  const PROC_KEY = "robotics-stocks.proc.v1";
 
   const CATEGORY_LABEL = {
     robot_kit: "ロボットキット",
@@ -36,45 +37,57 @@
     low: { label: "要確認", cls: "badge--mute" },
   };
 
+  const PROC_STATUS = [
+    { value: "unknown", label: "未確認", p: 0.45 },
+    { value: "maybe", label: "在庫微妙", p: 0.65 },
+    { value: "in", label: "在庫あり", p: 0.95 },
+    { value: "out", label: "在庫なし", p: 0.05 },
+  ];
+
+  const AKIBA_SHOPS = ["akizuki", "marutsu"];
+  const ONLINE_SHOPS = ["switch_science", "amazon", "marutsu"];
+
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
   const state = {
     inventory: null,
     shopping: null,
+    procurement: null,
     activeCategory: "all",
     query: "",
     activeProject: null,
-    todo: loadTodo(),
+    todo: loadJsonLocal(TODO_KEY, {}),
+    procState: loadJsonLocal(PROC_KEY, null),
   };
 
-  function loadTodo() {
+  function loadJsonLocal(key, fallback) {
     try {
-      const raw = localStorage.getItem(TODO_KEY);
-      return raw ? JSON.parse(raw) : {};
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
     } catch (_) {
-      return {};
+      return fallback;
     }
   }
 
-  function saveTodo() {
-    localStorage.setItem(TODO_KEY, JSON.stringify(state.todo));
+  function saveLocal(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
   function loadFilter() {
-    try {
-      const raw = localStorage.getItem(FILTER_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) {
-      return null;
-    }
+    return loadJsonLocal(FILTER_KEY, null);
   }
 
   function saveFilter() {
-    localStorage.setItem(
-      FILTER_KEY,
-      JSON.stringify({ category: state.activeCategory, query: state.query }),
-    );
+    saveLocal(FILTER_KEY, { category: state.activeCategory, query: state.query });
+  }
+
+  function saveTodo() {
+    saveLocal(TODO_KEY, state.todo);
+  }
+
+  function saveProcState() {
+    saveLocal(PROC_KEY, state.procState);
   }
 
   async function fetchJson(path) {
@@ -89,6 +102,13 @@
 
   function categoryLabel(cat) {
     return CATEGORY_LABEL[cat] || cat;
+  }
+
+  function badge(label, cls = "") {
+    const span = document.createElement("span");
+    span.className = "badge " + cls;
+    span.textContent = label;
+    return span;
   }
 
   /* ---------- INVENTORY ---------- */
@@ -122,7 +142,6 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "chip" + (state.activeCategory === c ? " is-active" : "");
-      btn.dataset.value = c;
       btn.textContent = c === "all" ? "すべて" : categoryLabel(c);
       btn.addEventListener("click", () => {
         state.activeCategory = c;
@@ -154,13 +173,6 @@
         .toLowerCase();
       return haystack.includes(q);
     });
-  }
-
-  function badge(label, cls = "") {
-    const span = document.createElement("span");
-    span.className = "badge " + cls;
-    span.textContent = label;
-    return span;
   }
 
   function renderItemCard(item) {
@@ -240,13 +252,6 @@
       });
       wrap.appendChild(btn);
     }
-  }
-
-  function totalShoppingCount() {
-    return state.shopping.projects.reduce(
-      (s, p) => s + p.groups.reduce((s2, g) => s2 + g.items.length, 0),
-      0,
-    );
   }
 
   function checkedCount(project) {
@@ -334,6 +339,279 @@
     $("#count-shopping").textContent = total - done;
   }
 
+  /* ---------- PROCUREMENT ---------- */
+
+  function initProcStateIfNeeded() {
+    if (!state.procurement) return;
+    const defaults = state.procurement.defaults;
+
+    if (!state.procState || typeof state.procState !== "object") {
+      state.procState = {};
+    }
+
+    if (!state.procState.params || typeof state.procState.params !== "object") {
+      state.procState.params = {};
+    }
+
+    for (const [k, v] of Object.entries(defaults)) {
+      const cur = Number(state.procState.params[k]);
+      state.procState.params[k] = Number.isFinite(cur) ? cur : v;
+    }
+
+    if (!state.procState.items || typeof state.procState.items !== "object") {
+      state.procState.items = {};
+    }
+
+    for (const item of state.procurement.items) {
+      if (!state.procState.items[item.id]) {
+        state.procState.items[item.id] = { akiba: "unknown", online: "unknown" };
+      }
+      if (!PROC_STATUS.some((x) => x.value === state.procState.items[item.id].akiba)) {
+        state.procState.items[item.id].akiba = "unknown";
+      }
+      if (!PROC_STATUS.some((x) => x.value === state.procState.items[item.id].online)) {
+        state.procState.items[item.id].online = "unknown";
+      }
+    }
+  }
+
+  function procP(status) {
+    const m = PROC_STATUS.find((x) => x.value === status);
+    return m ? m.p : 0.45;
+  }
+
+  function fmtDuration(min) {
+    if (min < 60) return `${Math.round(min)}分`;
+    const h = Math.floor(min / 60);
+    const m = Math.round(min % 60);
+    return m ? `${h}時間${m}分` : `${h}時間`;
+  }
+
+  function buildSearchUrl(shopId, query) {
+    const shop = state.procurement.shops.find((s) => s.id === shopId);
+    if (!shop) return null;
+    return shop.search_url + encodeURIComponent(query || "");
+  }
+
+  function evaluateProcurement() {
+    const items = state.procurement.items;
+    const params = state.procState.params;
+    const totalWeight = items.reduce((s, i) => s + (Number(i.weight) || 1), 0) || 1;
+
+    let akibaWeighted = 0;
+    let onlineWeighted = 0;
+    let unresolvedCritical = 0;
+
+    for (const item of items) {
+      const w = Number(item.weight) || 1;
+      const st = state.procState.items[item.id] || { akiba: "unknown", online: "unknown" };
+      const ak = procP(st.akiba);
+      const on = procP(st.online);
+      akibaWeighted += w * ak;
+      onlineWeighted += w * on;
+      if (w >= 1.2 && st.akiba === "unknown" && st.online === "unknown") unresolvedCritical += 1;
+    }
+
+    const akibaProb = akibaWeighted / totalWeight;
+    const onlineProb = onlineWeighted / totalWeight;
+
+    const akibaEtaMin =
+      params.prep_min +
+      params.transit_oneway_min +
+      params.store_stay_min +
+      params.extra_retry_min * (1 - akibaProb);
+
+    const now = new Date();
+    const afterCutoff = now.getHours() >= params.online_cutoff_hour;
+    const dispatchDelayDays = afterCutoff ? 1 : 0;
+    const onlineBaseMin =
+      (dispatchDelayDays + params.online_dispatch_days + params.online_shipping_days) * 24 * 60;
+    const onlineEtaMin = onlineBaseMin + (1 - onlineProb) * 12 * 60;
+
+    let recommendation = "hybrid";
+    let reason = "店舗と通販の期待値が近いので、クリティカル部品のみ先行調達が安全。";
+
+    if (akibaProb >= onlineProb + 0.12 && akibaEtaMin <= onlineEtaMin * 1.2) {
+      recommendation = "akiba";
+      reason = "今日の調達完了期待が高く、到着時間も最短。今から秋葉原に行く価値が高い。";
+    } else if (onlineProb >= akibaProb + 0.12 && onlineEtaMin < akibaEtaMin) {
+      recommendation = "online";
+      reason = "通販の確実性と到着予測が優位。店回りよりネット注文のほうが効率的。";
+    } else if (akibaEtaMin <= 180 && akibaProb >= 0.55) {
+      recommendation = "akiba";
+      reason = "短時間で店頭チェックできる見込みがあり、今日の前進を優先しやすい。";
+    }
+
+    return {
+      akibaProb,
+      onlineProb,
+      akibaEtaMin,
+      onlineEtaMin,
+      unresolvedCritical,
+      recommendation,
+      reason,
+    };
+  }
+
+  function recommendationLabel(code) {
+    if (code === "akiba") return { text: "秋葉原に行く", badge: "GO" };
+    if (code === "online") return { text: "通販優先", badge: "WEB" };
+    return { text: "ハイブリッド", badge: "MIX" };
+  }
+
+  function renderProcurement() {
+    const root = $("#procurement");
+    root.innerHTML = "";
+    if (!state.procurement) return;
+
+    $("#proc-updated").textContent = `更新 ${state.procurement.updated_at}`;
+
+    const e = evaluateProcurement();
+    const rec = recommendationLabel(e.recommendation);
+    $("#count-procurement").textContent = rec.badge;
+
+    const top = document.createElement("div");
+    top.className = "proc-grid";
+    top.innerHTML = `
+      <section class="proc-card">
+        <h3 class="proc-card__title">判定</h3>
+        <div class="proc-reco proc-reco--${e.recommendation}">
+          <div class="proc-reco__title">${rec.text}</div>
+          <div class="proc-reco__reason">${e.reason}</div>
+        </div>
+        <div class="proc-metrics">
+          <div class="proc-metric"><span>秋葉原 完了見込み</span><b>${Math.round(e.akibaProb * 100)}%</b></div>
+          <div class="proc-metric"><span>通販 完了見込み</span><b>${Math.round(e.onlineProb * 100)}%</b></div>
+          <div class="proc-metric"><span>秋葉原 ETA</span><b>${fmtDuration(e.akibaEtaMin)}</b></div>
+          <div class="proc-metric"><span>通販 ETA</span><b>${fmtDuration(e.onlineEtaMin)}</b></div>
+          <div class="proc-metric"><span>未確認クリティカル</span><b>${e.unresolvedCritical}件</b></div>
+        </div>
+      </section>
+
+      <section class="proc-card">
+        <h3 class="proc-card__title">計算パラメータ</h3>
+        <div class="proc-form">
+          <label>出発準備 (分)
+            <input type="number" min="0" step="1" data-proc-param="prep_min" value="${state.procState.params.prep_min}" />
+          </label>
+          <label>片道移動 (分)
+            <input type="number" min="0" step="1" data-proc-param="transit_oneway_min" value="${state.procState.params.transit_oneway_min}" />
+          </label>
+          <label>店頭探索 (分)
+            <input type="number" min="0" step="1" data-proc-param="store_stay_min" value="${state.procState.params.store_stay_min}" />
+          </label>
+          <label>在庫切れ再探索 (分)
+            <input type="number" min="0" step="1" data-proc-param="extra_retry_min" value="${state.procState.params.extra_retry_min}" />
+          </label>
+          <label>通販当日締切 (時)
+            <input type="number" min="0" max="23" step="1" data-proc-param="online_cutoff_hour" value="${state.procState.params.online_cutoff_hour}" />
+          </label>
+          <label>発送リードタイム (日)
+            <input type="number" min="0" step="0.5" data-proc-param="online_dispatch_days" value="${state.procState.params.online_dispatch_days}" />
+          </label>
+          <label>配送日数 (日)
+            <input type="number" min="0" step="0.5" data-proc-param="online_shipping_days" value="${state.procState.params.online_shipping_days}" />
+          </label>
+        </div>
+        <button class="ghost-btn" type="button" id="proc-reset">在庫判定を未確認に戻す</button>
+      </section>
+    `;
+
+    const table = document.createElement("section");
+    table.className = "proc-card";
+    table.innerHTML = `
+      <h3 class="proc-card__title">部品ごとの在庫判定（クローリング結果入力）</h3>
+      <p class="proc-help">ブラウザ単体では各ECの在庫を自動クローリングしづらいので、検索して結果をこの表に反映する運用にしています。</p>
+      <div class="proc-items" id="proc-items"></div>
+    `;
+
+    root.append(top, table);
+
+    const itemsRoot = $("#proc-items", root);
+    for (const item of state.procurement.items) {
+      const status = state.procState.items[item.id] || { akiba: "unknown", online: "unknown" };
+      const row = document.createElement("article");
+      row.className = "proc-item";
+
+      const storesAkiba = AKIBA_SHOPS.map((id) => {
+        const q = item.queries && item.queries[id];
+        if (!q) return "";
+        const url = buildSearchUrl(id, q);
+        const shop = state.procurement.shops.find((s) => s.id === id);
+        return `<a href="${url}" target="_blank" rel="noreferrer">${shop.name}</a>`;
+      })
+        .filter(Boolean)
+        .join(" / ");
+
+      const storesOnline = ONLINE_SHOPS.map((id) => {
+        const q = item.queries && item.queries[id];
+        if (!q) return "";
+        const url = buildSearchUrl(id, q);
+        const shop = state.procurement.shops.find((s) => s.id === id);
+        return `<a href="${url}" target="_blank" rel="noreferrer">${shop.name}</a>`;
+      })
+        .filter(Boolean)
+        .join(" / ");
+
+      row.innerHTML = `
+        <div class="proc-item__main">
+          <div class="proc-item__title">${item.label}</div>
+          <div class="proc-item__meta">重要度 ${item.weight}</div>
+          <div class="proc-item__links">
+            <span>店舗検索:</span> ${storesAkiba || "-"}
+          </div>
+          <div class="proc-item__links">
+            <span>通販検索:</span> ${storesOnline || "-"}
+          </div>
+        </div>
+        <div class="proc-item__controls">
+          <label>秋葉原
+            <select data-proc-item="${item.id}" data-channel="akiba">
+              ${PROC_STATUS.map((s) => `<option value="${s.value}" ${status.akiba === s.value ? "selected" : ""}>${s.label}</option>`).join("")}
+            </select>
+          </label>
+          <label>通販
+            <select data-proc-item="${item.id}" data-channel="online">
+              ${PROC_STATUS.map((s) => `<option value="${s.value}" ${status.online === s.value ? "selected" : ""}>${s.label}</option>`).join("")}
+            </select>
+          </label>
+        </div>
+      `;
+      itemsRoot.appendChild(row);
+    }
+
+    $$('[data-proc-param]', root).forEach((input) => {
+      input.addEventListener('change', () => {
+        const key = input.dataset.procParam;
+        const val = Number(input.value);
+        if (!Number.isFinite(val)) return;
+        state.procState.params[key] = val;
+        saveProcState();
+        renderProcurement();
+      });
+    });
+
+    $$('select[data-proc-item]', root).forEach((sel) => {
+      sel.addEventListener('change', () => {
+        const itemId = sel.dataset.procItem;
+        const channel = sel.dataset.channel;
+        if (!state.procState.items[itemId]) state.procState.items[itemId] = { akiba: 'unknown', online: 'unknown' };
+        state.procState.items[itemId][channel] = sel.value;
+        saveProcState();
+        renderProcurement();
+      });
+    });
+
+    $('#proc-reset', root).addEventListener('click', () => {
+      if (!confirm('在庫判定（秋葉原/通販）を全て未確認に戻しますか？')) return;
+      for (const item of state.procurement.items) {
+        state.procState.items[item.id] = { akiba: 'unknown', online: 'unknown' };
+      }
+      saveProcState();
+      renderProcurement();
+    });
+  }
+
   /* ---------- TABS ---------- */
 
   function setupTabs() {
@@ -377,13 +655,17 @@
 
   async function init() {
     $("#year").textContent = String(new Date().getFullYear());
+
     try {
-      const [inv, shop] = await Promise.all([
+      const [inv, shop, proc] = await Promise.all([
         fetchJson("./data/inventory.json"),
         fetchJson("./data/shopping.json"),
+        fetchJson("./data/procurement.json"),
       ]);
+
       state.inventory = inv;
       state.shopping = shop;
+      state.procurement = proc;
 
       $("#meta-updated").textContent = `更新 ${inv.updated_at}`;
 
@@ -395,6 +677,9 @@
 
       state.activeProject = (shop.projects[0] && shop.projects[0].id) || null;
 
+      initProcStateIfNeeded();
+      saveProcState();
+
       setupTabs();
       setupSearch();
       setupReset();
@@ -404,9 +689,10 @@
       renderInventoryList();
       renderProjectSwitch();
       renderShopping();
+      renderProcurement();
     } catch (e) {
       console.error(e);
-      document.body.innerHTML = `<pre style="padding:24px;color:#b00020;">データ読み込みに失敗しました。\n${e.message}</pre>`;
+      document.body.innerHTML = `<pre style="padding:24px;color:#b00020;">データ読み込みに失敗しました.\n${e.message}</pre>`;
     }
   }
 

@@ -1,0 +1,102 @@
+{
+  "updated_at": "2026-05-16",
+  "defaults": {
+    "prep_min": 15,
+    "transit_oneway_min": 35,
+    "store_stay_min": 60,
+    "extra_retry_min": 40,
+    "online_cutoff_hour": 14,
+    "online_dispatch_days": 0,
+    "online_shipping_days": 1.5
+  },
+  "shops": [
+    {
+      "id": "akizuki",
+      "name": "秋月電子",
+      "search_url": "https://akizukidenshi.com/catalog/goods/search.aspx?search="
+    },
+    {
+      "id": "marutsu",
+      "name": "マルツ",
+      "search_url": "https://www.marutsu.co.jp/pc/i/?q="
+    },
+    {
+      "id": "switch_science",
+      "name": "スイッチサイエンス",
+      "search_url": "https://www.switch-science.com/catalog/list/?q="
+    },
+    {
+      "id": "amazon",
+      "name": "Amazon",
+      "search_url": "https://www.amazon.co.jp/s?k="
+    }
+  ],
+  "items": [
+    {
+      "id": "esp32_devkitc",
+      "label": "ESP32 DevKitC 系マイコン",
+      "weight": 1.2,
+      "queries": {
+        "akizuki": "ESP32 DevKitC",
+        "marutsu": "ESP32 DevKitC",
+        "switch_science": "ESP32",
+        "amazon": "ESP32 DevKitC"
+      }
+    },
+    {
+      "id": "imu_6axis",
+      "label": "6軸IMU (LSM6DS系/ICM系)",
+      "weight": 1.2,
+      "queries": {
+        "akizuki": "LSM6DSV16X",
+        "marutsu": "ICM 6軸 IMU",
+        "switch_science": "IMU 6軸",
+        "amazon": "6軸 IMU モジュール"
+      }
+    },
+    {
+      "id": "tb6612_breakout",
+      "label": "TB6612FNG ブレークアウト/モジュール",
+      "weight": 1.1,
+      "queries": {
+        "akizuki": "TB6612 ブレークアウト",
+        "marutsu": "TB6612FNG モジュール",
+        "switch_science": "TB6612",
+        "amazon": "TB6612FNG モータードライバ モジュール"
+      }
+    },
+    {
+      "id": "encoder_motor_pair",
+      "label": "エンコーダ付きギヤードモーター x2",
+      "weight": 1.4,
+      "queries": {
+        "akizuki": "ギヤードモーター エンコーダ",
+        "marutsu": "エンコーダ付 ギヤード DCモータ",
+        "switch_science": "エンコーダ モーター",
+        "amazon": "エンコーダ付き ギヤードモーター"
+      }
+    },
+    {
+      "id": "battery_pack",
+      "label": "電源 (NiMH電池ボックス or 2S LiPo)",
+      "weight": 1.0,
+      "queries": {
+        "akizuki": "電池ボックス 単3",
+        "marutsu": "NiMH 電池ボックス",
+        "switch_science": "LiPo バッテリー",
+        "amazon": "単3 電池ボックス ロボット"
+      }
+    },
+    {
+      "id": "dcdc_converter",
+      "label": "降圧DCDCコンバータ",
+      "weight": 1.0,
+      "queries": {
+        "akizuki": "降圧 DCDC コンバータ",
+        "marutsu": "DCDC 降圧",
+        "switch_science": "降圧 DCDC",
+        "amazon": "降圧コンバータ 5V 3.3V"
+      }
+    }
+  ]
+}

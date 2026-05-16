@@ -8,6 +8,7 @@
 
 - 静的サイト（HTML / CSS / Vanilla JS）
 - データは `data/inventory.json` と `data/shopping.json`
+- 調達比較データは `data/procurement.json`
 - TODO のチェック状態は `localStorage` に保存（端末ごと）
 - レスポンシブ対応（モバイル優先）
 - ダーク/ライト自動切替（OS設定に追従）
@@ -21,6 +22,7 @@ app.js             # 描画・タブ切替・検索・TODO 永続化
 data/
   inventory.json   # 在庫マスタ
   shopping.json    # 買い物リスト（プロジェクト別）
+  procurement.json # 秋葉原 vs 通販の調達比較データ
 .nojekyll          # GitHub Pages の Jekyll 処理を無効化
 ```
 

@@ -28,6 +28,10 @@
           買い物
           <span class="tab__count" id="count-shopping">0</span>
         </button>
+        <button class="tab" data-tab="procurement" role="tab" aria-selected="false">
+          調達判断
+          <span class="tab__count" id="count-procurement">-</span>
+        </button>
       </nav>
     </header>
 
@@ -54,6 +58,17 @@
           <button class="ghost-btn" id="reset-todo" type="button" title="チェックを全部リセット">リセット</button>
         </div>
         <div class="shopping" id="shopping"></div>
+      </section>
+
+      <!-- PROCUREMENT TAB -->
+      <section id="tab-procurement" class="panel" role="tabpanel" hidden>
+        <div class="summary__overall">
+          <div>
+            在庫クローリング結果を入力して、<b>秋葉原に今行く</b>か<b>通販を待つ</b>かを比較。
+          </div>
+          <div id="proc-updated">-</div>
+        </div>
+        <div id="procurement"></div>
       </section>
     </main>
 
