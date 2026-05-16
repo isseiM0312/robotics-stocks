@@ -20,16 +20,19 @@
       "notes": ["キット箱ラベルから確認", "内容物は分解済みの可能性あり"]
     },
     {
-      "id": "tb6612fng",
+      "id": "tb6612fng-ic",
       "category": "driver_ic",
-      "name": "Dual DC Motor Driver IC",
+      "name": "TB6612FNG モータードライバIC（単体）",
       "model": "TB6612FNG",
       "pos_code": "111317",
       "quantity": 2,
       "unit": "pcs",
       "status": "opened",
       "confidence": "medium",
-      "notes": ["同一ラベルが2袋見えるため2個推定。実数確認推奨"]
+      "notes": [
+        "同一ラベルが2袋見えるため2個推定。実数確認推奨",
+        "IC単体。ブレッドボード試作にはブレークアウト/モジュールが別途必要"
+      ]
     },
     {
       "id": "switch-pb-2260l",
@@ -166,6 +169,20 @@
       "status": "in_use",
       "confidence": "medium",
       "notes": ["写真から見えるが、型番は未確認"]
+    },
+    {
+      "id": "ft-mc-002-encoder-status",
+      "category": "motor",
+      "name": "FT-MC-002 付属モーターのエンコーダ有無",
+      "model": "unknown",
+      "quantity": 0,
+      "unit": "check",
+      "status": "unknown",
+      "confidence": "low",
+      "notes": [
+        "倒立振子に必要なため仕様確認タスクとして登録",
+        "エンコーダ無しなら別途エンコーダ付きモーターを調達"
+      ]
     }
   ]
 }
