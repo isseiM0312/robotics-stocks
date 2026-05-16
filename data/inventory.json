@@ -171,6 +171,28 @@
       "notes": ["写真から見えるが、型番は未確認"]
     },
     {
+      "id": "compute-arduino-uno",
+      "category": "compute_board",
+      "name": "Arduino Uno（Type-C）",
+      "model": "unknown",
+      "quantity": 1,
+      "unit": "pcs",
+      "status": "in_use",
+      "confidence": "high",
+      "notes": ["ユーザー申告: UnoはType-C接続で利用可能"]
+    },
+    {
+      "id": "compute-esp32-microusb",
+      "category": "compute_board",
+      "name": "ESP32 開発ボード（micro-USB）",
+      "model": "unknown",
+      "quantity": 1,
+      "unit": "pcs",
+      "status": "opened",
+      "confidence": "medium",
+      "notes": ["画像確認ベース。型番は未確認"]
+    },
+    {
       "id": "ft-mc-002-encoder-status",
       "category": "motor",
       "name": "FT-MC-002 付属モーターのエンコーダ有無",
