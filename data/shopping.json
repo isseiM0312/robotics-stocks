@@ -10,11 +10,13 @@
           "name": "A. 必須（ないと立てられない）",
           "items": [
             { "id": "ip-mcu-esp32", "label": "ESP32 DevKitC 系マイコン", "where": "秋月", "note": "今回の本命。Arduino Uno R4 / Picoは代替" },
+            { "id": "ip-c2microb-cable", "label": "USB-C to micro-USB データ通信ケーブル", "where": "秋月/家電量販店", "note": "ESP32書き込み用。充電専用ケーブルは不可" },
             { "id": "ip-imu-6axis", "label": "6軸IMU（LSM6DSV16X / LSM6DS3 / ICM-42688系）", "where": "秋月", "note": "倒立振子の学習はraw加速度+ジャイロが本命。BNO055は補助枠" },
             { "id": "ip-driver-breakout", "label": "TB6612FNGブレークアウト/モジュール", "where": "秋月", "note": "在庫はIC単体の可能性が高いため、試作はブレークアウトを使う" },
             { "id": "ip-check-ftmc002-encoder", "label": "FT-MC-002付属モーターのエンコーダ有無を確認", "where": "手元確認", "note": "エンコーダ無しなら下のモーターを購入" },
             { "id": "ip-encoder-motor", "label": "エンコーダ付きギヤードDCモーター ×2", "where": "マルツ/ロボショップ", "note": "FT-MC-002がエンコーダ無しの場合は必須" },
-            { "id": "ip-power", "label": "電源（NiMH電池ボックス or 2S LiPo + 充電器）", "where": "秋月", "note": "最初はNiMHが安全" },
+            { "id": "ip-battery-box-aa4", "label": "単三4本直列の電池ボックス（モーター用）", "where": "秋月", "note": "まずはNiMH 4本構成が安全。GND共通を忘れない" },
+            { "id": "ip-power", "label": "電源（NiMH電池 or 2S LiPo + 充電器）", "where": "秋月", "note": "電池ボックスに入れる電池本体。最初はNiMHが安全" },
             { "id": "ip-dcdc", "label": "降圧DCDCコンバータ（5V/3.3V）", "where": "秋月" }
           ]
         },
