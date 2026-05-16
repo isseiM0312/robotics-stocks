@@ -54,14 +54,15 @@
     inventory: null,
     shopping: null,
     procurement: null,
+    procurementScan: null,
     activeCategory: "all",
     query: "",
     activeProject: null,
-    todo: loadJsonLocal(TODO_KEY, {}),
-    procState: loadJsonLocal(PROC_KEY, null),
+    todo: loadJson(TODO_KEY, {}),
+    procState: loadJson(PROC_KEY, null),
   };
 
-  function loadJsonLocal(key, fallback) {
+  function loadJson(key, fallback) {
     try {
       const raw = localStorage.getItem(key);
       return raw ? JSON.parse(raw) : fallback;
@@ -70,24 +71,24 @@
     }
   }
 
-  function saveLocal(key, value) {
+  function saveJson(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  function loadFilter() {
-    return loadJsonLocal(FILTER_KEY, null);
+  function saveFilter() {
+    saveJson(FILTER_KEY, { category: state.activeCategory, query: state.query });
   }
 
-  function saveFilter() {
-    saveLocal(FILTER_KEY, { category: state.activeCategory, query: state.query });
+  function loadFilter() {
+    return loadJson(FILTER_KEY, null);
   }
 
   function saveTodo() {
-    saveLocal(TODO_KEY, state.todo);
+    saveJson(TODO_KEY, state.todo);
   }
 
   function saveProcState() {
-    saveLocal(PROC_KEY, state.procState);
+    saveJson(PROC_KEY, state.procState);
   }
 
   async function fetchJson(path) {
@@ -215,7 +216,6 @@
       }
       li.appendChild(ul);
     }
-
     return li;
   }
 
@@ -275,10 +275,7 @@
 
     const overall = document.createElement("div");
     overall.className = "summary__overall";
-    overall.innerHTML = `
-      <div>${project.summary || ""}</div>
-      <div>${done} / ${total}</div>
-    `;
+    overall.innerHTML = `<div>${project.summary || ""}</div><div>${done} / ${total}</div>`;
     root.appendChild(overall);
 
     for (const group of project.groups) {
@@ -325,7 +322,6 @@
         if (it.where) subParts.push(it.where);
         if (it.note) subParts.push(it.note);
         sub.textContent = subParts.join(" · ");
-
         body.append(lbl);
         if (subParts.length) body.appendChild(sub);
 
@@ -335,7 +331,6 @@
       gWrap.appendChild(list);
       root.appendChild(gWrap);
     }
-
     $("#count-shopping").textContent = total - done;
   }
 
@@ -343,41 +338,27 @@
 
   function initProcStateIfNeeded() {
     if (!state.procurement) return;
-    const defaults = state.procurement.defaults;
+    const defaults = state.procurement.defaults || {};
 
-    if (!state.procState || typeof state.procState !== "object") {
-      state.procState = {};
-    }
-
-    if (!state.procState.params || typeof state.procState.params !== "object") {
-      state.procState.params = {};
-    }
+    if (!state.procState || typeof state.procState !== "object") state.procState = {};
+    if (!state.procState.params || typeof state.procState.params !== "object") state.procState.params = {};
+    if (!state.procState.items || typeof state.procState.items !== "object") state.procState.items = {};
 
     for (const [k, v] of Object.entries(defaults)) {
       const cur = Number(state.procState.params[k]);
       state.procState.params[k] = Number.isFinite(cur) ? cur : v;
     }
 
-    if (!state.procState.items || typeof state.procState.items !== "object") {
-      state.procState.items = {};
-    }
-
-    for (const item of state.procurement.items) {
+    for (const item of state.procurement.items || []) {
       if (!state.procState.items[item.id]) {
         state.procState.items[item.id] = { akiba: "unknown", online: "unknown" };
-      }
-      if (!PROC_STATUS.some((x) => x.value === state.procState.items[item.id].akiba)) {
-        state.procState.items[item.id].akiba = "unknown";
-      }
-      if (!PROC_STATUS.some((x) => x.value === state.procState.items[item.id].online)) {
-        state.procState.items[item.id].online = "unknown";
       }
     }
   }
 
-  function procP(status) {
-    const m = PROC_STATUS.find((x) => x.value === status);
-    return m ? m.p : 0.45;
+  function getProcStatusP(v) {
+    const f = PROC_STATUS.find((x) => x.value === v);
+    return f ? f.p : 0.45;
   }
 
   function fmtDuration(min) {
@@ -388,75 +369,86 @@
   }
 
   function buildSearchUrl(shopId, query) {
-    const shop = state.procurement.shops.find((s) => s.id === shopId);
-    if (!shop) return null;
-    return shop.search_url + encodeURIComponent(query || "");
+    const shop = (state.procurement.shops || []).find((s) => s.id === shopId);
+    if (!shop || !query) return null;
+    return `${shop.search_url}${encodeURIComponent(query)}`;
   }
 
   function evaluateProcurement() {
-    const items = state.procurement.items;
-    const params = state.procState.params;
+    const items = state.procurement.items || [];
+    const params = state.procState.params || {};
     const totalWeight = items.reduce((s, i) => s + (Number(i.weight) || 1), 0) || 1;
 
-    let akibaWeighted = 0;
-    let onlineWeighted = 0;
+    let akibaW = 0;
+    let onlineW = 0;
     let unresolvedCritical = 0;
 
     for (const item of items) {
       const w = Number(item.weight) || 1;
       const st = state.procState.items[item.id] || { akiba: "unknown", online: "unknown" };
-      const ak = procP(st.akiba);
-      const on = procP(st.online);
-      akibaWeighted += w * ak;
-      onlineWeighted += w * on;
-      if (w >= 1.2 && st.akiba === "unknown" && st.online === "unknown") unresolvedCritical += 1;
+      akibaW += w * getProcStatusP(st.akiba);
+      onlineW += w * getProcStatusP(st.online);
+      if (w >= 1.2 && st.akiba === "unknown" && st.online === "unknown") unresolvedCritical++;
     }
 
-    const akibaProb = akibaWeighted / totalWeight;
-    const onlineProb = onlineWeighted / totalWeight;
+    const akibaProb = akibaW / totalWeight;
+    const onlineProb = onlineW / totalWeight;
 
     const akibaEtaMin =
-      params.prep_min +
-      params.transit_oneway_min +
-      params.store_stay_min +
-      params.extra_retry_min * (1 - akibaProb);
+      Number(params.prep_min) +
+      Number(params.transit_oneway_min) +
+      Number(params.store_stay_min) +
+      Number(params.extra_retry_min) * (1 - akibaProb);
 
     const now = new Date();
-    const afterCutoff = now.getHours() >= params.online_cutoff_hour;
-    const dispatchDelayDays = afterCutoff ? 1 : 0;
+    const cutoff = Number(params.online_cutoff_hour);
+    const afterCutoff = Number.isFinite(cutoff) ? now.getHours() >= cutoff : false;
+    const dispatchPlus = afterCutoff ? 1 : 0;
     const onlineBaseMin =
-      (dispatchDelayDays + params.online_dispatch_days + params.online_shipping_days) * 24 * 60;
+      (dispatchPlus + Number(params.online_dispatch_days) + Number(params.online_shipping_days)) * 24 * 60;
     const onlineEtaMin = onlineBaseMin + (1 - onlineProb) * 12 * 60;
 
     let recommendation = "hybrid";
-    let reason = "店舗と通販の期待値が近いので、クリティカル部品のみ先行調達が安全。";
+    let reason = "店舗と通販の期待値が近いため、クリティカル部品のみ先行調達が安全。";
 
     if (akibaProb >= onlineProb + 0.12 && akibaEtaMin <= onlineEtaMin * 1.2) {
       recommendation = "akiba";
-      reason = "今日の調達完了期待が高く、到着時間も最短。今から秋葉原に行く価値が高い。";
+      reason = "今日の完了期待が高く、到着時間も短いので秋葉原優先。";
     } else if (onlineProb >= akibaProb + 0.12 && onlineEtaMin < akibaEtaMin) {
       recommendation = "online";
-      reason = "通販の確実性と到着予測が優位。店回りよりネット注文のほうが効率的。";
+      reason = "通販の確実性と到着予測が優位。オンライン優先で良い。";
     } else if (akibaEtaMin <= 180 && akibaProb >= 0.55) {
       recommendation = "akiba";
-      reason = "短時間で店頭チェックできる見込みがあり、今日の前進を優先しやすい。";
+      reason = "短時間で確認できる見込みがあり、今日前進しやすい。";
     }
 
-    return {
-      akibaProb,
-      onlineProb,
-      akibaEtaMin,
-      onlineEtaMin,
-      unresolvedCritical,
-      recommendation,
-      reason,
-    };
+    return { akibaProb, onlineProb, akibaEtaMin, onlineEtaMin, unresolvedCritical, recommendation, reason };
   }
 
   function recommendationLabel(code) {
     if (code === "akiba") return { text: "秋葉原に行く", badge: "GO" };
     if (code === "online") return { text: "通販優先", badge: "WEB" };
     return { text: "ハイブリッド", badge: "MIX" };
+  }
+
+  function applyScanToState({ overwrite = false } = {}) {
+    if (!state.procurementScan || !Array.isArray(state.procurementScan.items)) return;
+
+    const map = new Map(state.procurementScan.items.map((it) => [it.id, it]));
+    for (const item of state.procurement.items || []) {
+      const scan = map.get(item.id);
+      if (!scan) continue;
+      const current = state.procState.items[item.id] || { akiba: "unknown", online: "unknown" };
+      for (const channel of ["akiba", "online"]) {
+        const candidate = scan[channel]?.status;
+        if (!candidate || !PROC_STATUS.some((x) => x.value === candidate)) continue;
+        if (overwrite || current[channel] === "unknown") {
+          current[channel] = candidate;
+        }
+      }
+      state.procState.items[item.id] = current;
+    }
+    saveProcState();
   }
 
   function renderProcurement() {
@@ -466,89 +458,80 @@
 
     $("#proc-updated").textContent = `更新 ${state.procurement.updated_at}`;
 
-    const e = evaluateProcurement();
-    const rec = recommendationLabel(e.recommendation);
+    const ev = evaluateProcurement();
+    const rec = recommendationLabel(ev.recommendation);
     $("#count-procurement").textContent = rec.badge;
 
     const top = document.createElement("div");
     top.className = "proc-grid";
+    const scanText = state.procurementScan?.generated_at
+      ? `最新スキャン: ${state.procurementScan.generated_at}`
+      : "最新スキャン: なし";
     top.innerHTML = `
       <section class="proc-card">
         <h3 class="proc-card__title">判定</h3>
-        <div class="proc-reco proc-reco--${e.recommendation}">
+        <div class="proc-reco proc-reco--${ev.recommendation}">
           <div class="proc-reco__title">${rec.text}</div>
-          <div class="proc-reco__reason">${e.reason}</div>
+          <div class="proc-reco__reason">${ev.reason}</div>
         </div>
         <div class="proc-metrics">
-          <div class="proc-metric"><span>秋葉原 完了見込み</span><b>${Math.round(e.akibaProb * 100)}%</b></div>
-          <div class="proc-metric"><span>通販 完了見込み</span><b>${Math.round(e.onlineProb * 100)}%</b></div>
-          <div class="proc-metric"><span>秋葉原 ETA</span><b>${fmtDuration(e.akibaEtaMin)}</b></div>
-          <div class="proc-metric"><span>通販 ETA</span><b>${fmtDuration(e.onlineEtaMin)}</b></div>
-          <div class="proc-metric"><span>未確認クリティカル</span><b>${e.unresolvedCritical}件</b></div>
+          <div class="proc-metric"><span>秋葉原 完了見込み</span><b>${Math.round(ev.akibaProb * 100)}%</b></div>
+          <div class="proc-metric"><span>通販 完了見込み</span><b>${Math.round(ev.onlineProb * 100)}%</b></div>
+          <div class="proc-metric"><span>秋葉原 ETA</span><b>${fmtDuration(ev.akibaEtaMin)}</b></div>
+          <div class="proc-metric"><span>通販 ETA</span><b>${fmtDuration(ev.onlineEtaMin)}</b></div>
+          <div class="proc-metric"><span>未確認クリティカル</span><b>${ev.unresolvedCritical}件</b></div>
         </div>
       </section>
-
       <section class="proc-card">
         <h3 class="proc-card__title">計算パラメータ</h3>
         <div class="proc-form">
-          <label>出発準備 (分)
-            <input type="number" min="0" step="1" data-proc-param="prep_min" value="${state.procState.params.prep_min}" />
-          </label>
-          <label>片道移動 (分)
-            <input type="number" min="0" step="1" data-proc-param="transit_oneway_min" value="${state.procState.params.transit_oneway_min}" />
-          </label>
-          <label>店頭探索 (分)
-            <input type="number" min="0" step="1" data-proc-param="store_stay_min" value="${state.procState.params.store_stay_min}" />
-          </label>
-          <label>在庫切れ再探索 (分)
-            <input type="number" min="0" step="1" data-proc-param="extra_retry_min" value="${state.procState.params.extra_retry_min}" />
-          </label>
-          <label>通販当日締切 (時)
-            <input type="number" min="0" max="23" step="1" data-proc-param="online_cutoff_hour" value="${state.procState.params.online_cutoff_hour}" />
-          </label>
-          <label>発送リードタイム (日)
-            <input type="number" min="0" step="0.5" data-proc-param="online_dispatch_days" value="${state.procState.params.online_dispatch_days}" />
-          </label>
-          <label>配送日数 (日)
-            <input type="number" min="0" step="0.5" data-proc-param="online_shipping_days" value="${state.procState.params.online_shipping_days}" />
-          </label>
+          <label>出発準備 (分)<input type="number" min="0" step="1" data-proc-param="prep_min" value="${state.procState.params.prep_min}" /></label>
+          <label>片道移動 (分)<input type="number" min="0" step="1" data-proc-param="transit_oneway_min" value="${state.procState.params.transit_oneway_min}" /></label>
+          <label>店頭探索 (分)<input type="number" min="0" step="1" data-proc-param="store_stay_min" value="${state.procState.params.store_stay_min}" /></label>
+          <label>再探索追加 (分)<input type="number" min="0" step="1" data-proc-param="extra_retry_min" value="${state.procState.params.extra_retry_min}" /></label>
+          <label>通販当日締切 (時)<input type="number" min="0" max="23" step="1" data-proc-param="online_cutoff_hour" value="${state.procState.params.online_cutoff_hour}" /></label>
+          <label>発送日数 (日)<input type="number" min="0" step="0.5" data-proc-param="online_dispatch_days" value="${state.procState.params.online_dispatch_days}" /></label>
+          <label>配送日数 (日)<input type="number" min="0" step="0.5" data-proc-param="online_shipping_days" value="${state.procState.params.online_shipping_days}" /></label>
         </div>
-        <button class="ghost-btn" type="button" id="proc-reset">在庫判定を未確認に戻す</button>
+        <div class="proc-actions">
+          <div class="proc-scan-info">${scanText}</div>
+          <button class="ghost-btn" type="button" id="proc-apply-scan">スキャン結果を反映</button>
+          <button class="ghost-btn" type="button" id="proc-overwrite-scan">スキャンで上書き</button>
+          <button class="ghost-btn" type="button" id="proc-reset">判定を未確認に戻す</button>
+        </div>
       </section>
     `;
+    root.appendChild(top);
 
     const table = document.createElement("section");
     table.className = "proc-card";
     table.innerHTML = `
-      <h3 class="proc-card__title">部品ごとの在庫判定（クローリング結果入力）</h3>
-      <p class="proc-help">ブラウザ単体では各ECの在庫を自動クローリングしづらいので、検索して結果をこの表に反映する運用にしています。</p>
+      <h3 class="proc-card__title">部品ごとの在庫判定（半自動クロール入力）</h3>
+      <p class="proc-help">Nodeスクリプトで検索結果を集めて反映し、必要に応じて手修正する運用。</p>
       <div class="proc-items" id="proc-items"></div>
     `;
+    root.appendChild(table);
 
-    root.append(top, table);
-
-    const itemsRoot = $("#proc-items", root);
-    for (const item of state.procurement.items) {
+    const itemsRoot = $("#proc-items", table);
+    for (const item of state.procurement.items || []) {
       const status = state.procState.items[item.id] || { akiba: "unknown", online: "unknown" };
       const row = document.createElement("article");
       row.className = "proc-item";
 
       const storesAkiba = AKIBA_SHOPS.map((id) => {
-        const q = item.queries && item.queries[id];
-        if (!q) return "";
+        const q = item.queries?.[id];
+        const shop = (state.procurement.shops || []).find((s) => s.id === id);
         const url = buildSearchUrl(id, q);
-        const shop = state.procurement.shops.find((s) => s.id === id);
-        return `<a href="${url}" target="_blank" rel="noreferrer">${shop.name}</a>`;
+        return shop && url ? `<a href="${url}" target="_blank" rel="noreferrer">${shop.name}</a>` : "";
       })
         .filter(Boolean)
         .join(" / ");
 
       const storesOnline = ONLINE_SHOPS.map((id) => {
-        const q = item.queries && item.queries[id];
-        if (!q) return "";
+        const q = item.queries?.[id];
+        const shop = (state.procurement.shops || []).find((s) => s.id === id);
         const url = buildSearchUrl(id, q);
-        const shop = state.procurement.shops.find((s) => s.id === id);
-        return `<a href="${url}" target="_blank" rel="noreferrer">${shop.name}</a>`;
+        return shop && url ? `<a href="${url}" target="_blank" rel="noreferrer">${shop.name}</a>` : "";
       })
         .filter(Boolean)
         .join(" / ");
@@ -557,12 +540,8 @@
         <div class="proc-item__main">
           <div class="proc-item__title">${item.label}</div>
           <div class="proc-item__meta">重要度 ${item.weight}</div>
-          <div class="proc-item__links">
-            <span>店舗検索:</span> ${storesAkiba || "-"}
-          </div>
-          <div class="proc-item__links">
-            <span>通販検索:</span> ${storesOnline || "-"}
-          </div>
+          <div class="proc-item__links"><span>店舗検索:</span> ${storesAkiba || "-"}</div>
+          <div class="proc-item__links"><span>通販検索:</span> ${storesOnline || "-"}</div>
         </div>
         <div class="proc-item__controls">
           <label>秋葉原
@@ -580,8 +559,8 @@
       itemsRoot.appendChild(row);
     }
 
-    $$('[data-proc-param]', root).forEach((input) => {
-      input.addEventListener('change', () => {
+    $$("[data-proc-param]", root).forEach((input) => {
+      input.addEventListener("change", () => {
         const key = input.dataset.procParam;
         const val = Number(input.value);
         if (!Number.isFinite(val)) return;
@@ -591,21 +570,38 @@
       });
     });
 
-    $$('select[data-proc-item]', root).forEach((sel) => {
-      sel.addEventListener('change', () => {
+    $$("select[data-proc-item]", root).forEach((sel) => {
+      sel.addEventListener("change", () => {
         const itemId = sel.dataset.procItem;
         const channel = sel.dataset.channel;
-        if (!state.procState.items[itemId]) state.procState.items[itemId] = { akiba: 'unknown', online: 'unknown' };
+        if (!state.procState.items[itemId]) state.procState.items[itemId] = { akiba: "unknown", online: "unknown" };
         state.procState.items[itemId][channel] = sel.value;
         saveProcState();
         renderProcurement();
       });
     });
 
-    $('#proc-reset', root).addEventListener('click', () => {
-      if (!confirm('在庫判定（秋葉原/通販）を全て未確認に戻しますか？')) return;
-      for (const item of state.procurement.items) {
-        state.procState.items[item.id] = { akiba: 'unknown', online: 'unknown' };
+    const applyBtn = $("#proc-apply-scan", root);
+    applyBtn.disabled = !state.procurementScan;
+    applyBtn.addEventListener("click", () => {
+      if (!state.procurementScan) return;
+      applyScanToState({ overwrite: false });
+      renderProcurement();
+    });
+
+    const overwriteBtn = $("#proc-overwrite-scan", root);
+    overwriteBtn.disabled = !state.procurementScan;
+    overwriteBtn.addEventListener("click", () => {
+      if (!state.procurementScan) return;
+      if (!confirm("現在の手動判定をスキャン結果で上書きしますか？")) return;
+      applyScanToState({ overwrite: true });
+      renderProcurement();
+    });
+
+    $("#proc-reset", root).addEventListener("click", () => {
+      if (!confirm("在庫判定（秋葉原/通販）を全て未確認に戻しますか？")) return;
+      for (const item of state.procurement.items || []) {
+        state.procState.items[item.id] = { akiba: "unknown", online: "unknown" };
       }
       saveProcState();
       renderProcurement();
@@ -655,17 +651,18 @@
 
   async function init() {
     $("#year").textContent = String(new Date().getFullYear());
-
     try {
-      const [inv, shop, proc] = await Promise.all([
+      const [inv, shop, proc, procScan] = await Promise.all([
         fetchJson("./data/inventory.json"),
         fetchJson("./data/shopping.json"),
         fetchJson("./data/procurement.json"),
+        fetchJson("./data/procurement_scan.json").catch(() => null),
       ]);
 
       state.inventory = inv;
       state.shopping = shop;
       state.procurement = proc;
+      state.procurementScan = procScan;
 
       $("#meta-updated").textContent = `更新 ${inv.updated_at}`;
 
@@ -674,7 +671,6 @@
         state.activeCategory = savedFilter.category || "all";
         state.query = savedFilter.query || "";
       }
-
       state.activeProject = (shop.projects[0] && shop.projects[0].id) || null;
 
       initProcStateIfNeeded();
@@ -692,7 +688,7 @@
       renderProcurement();
     } catch (e) {
       console.error(e);
-      document.body.innerHTML = `<pre style="padding:24px;color:#b00020;">データ読み込みに失敗しました.\n${e.message}</pre>`;
+      document.body.innerHTML = `<pre style="padding:24px;color:#b00020;">データ読み込みに失敗しました。\n${e.message}</pre>`;
     }
   }
 

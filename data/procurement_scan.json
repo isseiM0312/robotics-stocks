@@ -1,0 +1,235 @@
+{
+  "generated_at": "2026-05-16T03:34:09.419Z",
+  "generated_by": "tools/semi_crawl.mjs",
+  "timeout_ms": 10000,
+  "items": [
+    {
+      "id": "esp32_devkitc",
+      "label": "ESP32 DevKitC 系マイコン",
+      "akiba": {
+        "status": "out",
+        "checked_shops": 2
+      },
+      "online": {
+        "status": "in",
+        "checked_shops": 3
+      },
+      "shops": {
+        "akizuki": {
+          "status": "out",
+          "evidence": "販売終了",
+          "http_status": 200,
+          "url": "https://akizukidenshi.com/catalog/goods/search.aspx?search=ESP32%20DevKitC"
+        },
+        "marutsu": {
+          "status": "unknown",
+          "evidence": "",
+          "http_status": 404,
+          "url": "https://www.marutsu.co.jp/pc/i/?q=ESP32%20DevKitC"
+        },
+        "switch_science": {
+          "status": "maybe",
+          "evidence": "お取り寄せ",
+          "http_status": 200,
+          "url": "https://www.switch-science.com/catalog/list/?q=ESP32"
+        },
+        "amazon": {
+          "status": "in",
+          "evidence": "カートに入れる",
+          "http_status": 200,
+          "url": "https://www.amazon.co.jp/s?k=ESP32%20DevKitC"
+        }
+      }
+    },
+    {
+      "id": "imu_6axis",
+      "label": "6軸IMU (LSM6DS系/ICM系)",
+      "akiba": {
+        "status": "out",
+        "checked_shops": 2
+      },
+      "online": {
+        "status": "in",
+        "checked_shops": 3
+      },
+      "shops": {
+        "akizuki": {
+          "status": "out",
+          "evidence": "販売終了",
+          "http_status": 200,
+          "url": "https://akizukidenshi.com/catalog/goods/search.aspx?search=LSM6DSV16X"
+        },
+        "marutsu": {
+          "status": "unknown",
+          "evidence": "",
+          "http_status": 404,
+          "url": "https://www.marutsu.co.jp/pc/i/?q=ICM%206%E8%BB%B8%20IMU"
+        },
+        "switch_science": {
+          "status": "maybe",
+          "evidence": "お取り寄せ",
+          "http_status": 200,
+          "url": "https://www.switch-science.com/catalog/list/?q=IMU%206%E8%BB%B8"
+        },
+        "amazon": {
+          "status": "in",
+          "evidence": "カートに入れる",
+          "http_status": 200,
+          "url": "https://www.amazon.co.jp/s?k=6%E8%BB%B8%20IMU%20%E3%83%A2%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB"
+        }
+      }
+    },
+    {
+      "id": "tb6612_breakout",
+      "label": "TB6612FNG ブレークアウト/モジュール",
+      "akiba": {
+        "status": "out",
+        "checked_shops": 2
+      },
+      "online": {
+        "status": "in",
+        "checked_shops": 3
+      },
+      "shops": {
+        "akizuki": {
+          "status": "out",
+          "evidence": "販売終了",
+          "http_status": 200,
+          "url": "https://akizukidenshi.com/catalog/goods/search.aspx?search=TB6612%20%E3%83%96%E3%83%AC%E3%83%BC%E3%82%AF%E3%82%A2%E3%82%A6%E3%83%88"
+        },
+        "marutsu": {
+          "status": "unknown",
+          "evidence": "",
+          "http_status": 404,
+          "url": "https://www.marutsu.co.jp/pc/i/?q=TB6612FNG%20%E3%83%A2%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB"
+        },
+        "switch_science": {
+          "status": "maybe",
+          "evidence": "お取り寄せ",
+          "http_status": 200,
+          "url": "https://www.switch-science.com/catalog/list/?q=TB6612"
+        },
+        "amazon": {
+          "status": "in",
+          "evidence": "カートに入れる",
+          "http_status": 200,
+          "url": "https://www.amazon.co.jp/s?k=TB6612FNG%20%E3%83%A2%E3%83%BC%E3%82%BF%E3%83%BC%E3%83%89%E3%83%A9%E3%82%A4%E3%83%90%20%E3%83%A2%E3%82%B8%E3%83%A5%E3%83%BC%E3%83%AB"
+        }
+      }
+    },
+    {
+      "id": "encoder_motor_pair",
+      "label": "エンコーダ付きギヤードモーター x2",
+      "akiba": {
+        "status": "out",
+        "checked_shops": 2
+      },
+      "online": {
+        "status": "in",
+        "checked_shops": 3
+      },
+      "shops": {
+        "akizuki": {
+          "status": "out",
+          "evidence": "販売終了",
+          "http_status": 200,
+          "url": "https://akizukidenshi.com/catalog/goods/search.aspx?search=%E3%82%AE%E3%83%A4%E3%83%BC%E3%83%89%E3%83%A2%E3%83%BC%E3%82%BF%E3%83%BC%20%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80"
+        },
+        "marutsu": {
+          "status": "unknown",
+          "evidence": "",
+          "http_status": 404,
+          "url": "https://www.marutsu.co.jp/pc/i/?q=%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E4%BB%98%20%E3%82%AE%E3%83%A4%E3%83%BC%E3%83%89%20DC%E3%83%A2%E3%83%BC%E3%82%BF"
+        },
+        "switch_science": {
+          "status": "maybe",
+          "evidence": "お取り寄せ",
+          "http_status": 200,
+          "url": "https://www.switch-science.com/catalog/list/?q=%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%20%E3%83%A2%E3%83%BC%E3%82%BF%E3%83%BC"
+        },
+        "amazon": {
+          "status": "in",
+          "evidence": "販売中",
+          "http_status": 200,
+          "url": "https://www.amazon.co.jp/s?k=%E3%82%A8%E3%83%B3%E3%82%B3%E3%83%BC%E3%83%80%E4%BB%98%E3%81%8D%20%E3%82%AE%E3%83%A4%E3%83%BC%E3%83%89%E3%83%A2%E3%83%BC%E3%82%BF%E3%83%BC"
+        }
+      }
+    },
+    {
+      "id": "battery_pack",
+      "label": "電源 (NiMH電池ボックス or 2S LiPo)",
+      "akiba": {
+        "status": "out",
+        "checked_shops": 2
+      },
+      "online": {
+        "status": "in",
+        "checked_shops": 3
+      },
+      "shops": {
+        "akizuki": {
+          "status": "out",
+          "evidence": "販売終了",
+          "http_status": 200,
+          "url": "https://akizukidenshi.com/catalog/goods/search.aspx?search=%E9%9B%BB%E6%B1%A0%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%20%E5%8D%983"
+        },
+        "marutsu": {
+          "status": "unknown",
+          "evidence": "",
+          "http_status": 404,
+          "url": "https://www.marutsu.co.jp/pc/i/?q=NiMH%20%E9%9B%BB%E6%B1%A0%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9"
+        },
+        "switch_science": {
+          "status": "maybe",
+          "evidence": "お取り寄せ",
+          "http_status": 200,
+          "url": "https://www.switch-science.com/catalog/list/?q=LiPo%20%E3%83%90%E3%83%83%E3%83%86%E3%83%AA%E3%83%BC"
+        },
+        "amazon": {
+          "status": "in",
+          "evidence": "販売中",
+          "http_status": 200,
+          "url": "https://www.amazon.co.jp/s?k=%E5%8D%983%20%E9%9B%BB%E6%B1%A0%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%20%E3%83%AD%E3%83%9C%E3%83%83%E3%83%88"
+        }
+      }
+    },
+    {
+      "id": "dcdc_converter",
+      "label": "降圧DCDCコンバータ",
+      "akiba": {
+        "status": "out",
+        "checked_shops": 2
+      },
+      "online": {
+        "status": "in",
+        "checked_shops": 3
+      },
+      "shops": {
+        "akizuki": {
+          "status": "out",
+          "evidence": "販売終了",
+          "http_status": 200,
+          "url": "https://akizukidenshi.com/catalog/goods/search.aspx?search=%E9%99%8D%E5%9C%A7%20DCDC%20%E3%82%B3%E3%83%B3%E3%83%90%E3%83%BC%E3%82%BF"
+        },
+        "marutsu": {
+          "status": "unknown",
+          "evidence": "",
+          "http_status": 404,
+          "url": "https://www.marutsu.co.jp/pc/i/?q=DCDC%20%E9%99%8D%E5%9C%A7"
+        },
+        "switch_science": {
+          "status": "maybe",
+          "evidence": "お取り寄せ",
+          "http_status": 200,
+          "url": "https://www.switch-science.com/catalog/list/?q=%E9%99%8D%E5%9C%A7%20DCDC"
+        },
+        "amazon": {
+          "status": "in",
+          "evidence": "カートに入れる",
+          "http_status": 200,
+          "url": "https://www.amazon.co.jp/s?k=%E9%99%8D%E5%9C%A7%E3%82%B3%E3%83%B3%E3%83%90%E3%83%BC%E3%82%BF%205V%203.3V"
+        }
+      }
+    }
+  ]
+}

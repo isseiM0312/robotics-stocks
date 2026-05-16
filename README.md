@@ -9,6 +9,7 @@
 - 静的サイト（HTML / CSS / Vanilla JS）
 - データは `data/inventory.json` と `data/shopping.json`
 - 調達比較データは `data/procurement.json`
+- 半自動クロール結果は `data/procurement_scan.json`
 - TODO のチェック状態は `localStorage` に保存（端末ごと）
 - レスポンシブ対応（モバイル優先）
 - ダーク/ライト自動切替（OS設定に追従）
@@ -23,6 +24,9 @@ data/
   inventory.json   # 在庫マスタ
   shopping.json    # 買い物リスト（プロジェクト別）
   procurement.json # 秋葉原 vs 通販の調達比較データ
+  procurement_scan.json # 半自動クロール結果
+tools/
+  semi_crawl.mjs   # 調達サイト検索結果の半自動クロール
 .nojekyll          # GitHub Pages の Jekyll 処理を無効化
 ```
 
@@ -40,6 +44,22 @@ python3 -m http.server 8000
 - 在庫を変えたら `data/inventory.json` を編集
 - 買い物リストを変えたら `data/shopping.json` を編集
 - マスタは別リポジトリ `robotics/inventory/current_stock.yml` 側にあり、変更があったらこちらにも反映する
+
+### 半自動クロール
+
+```bash
+# procurement.json にある検索クエリを巡回して
+# procurement_scan.json を更新
+node tools/semi_crawl.mjs
+
+# 保存せず結果確認だけ
+node tools/semi_crawl.mjs --dry-run
+```
+
+その後、ダッシュボードの `調達判断` タブで:
+
+- `スキャン結果を反映`（未確認だけ埋める）
+- `スキャンで上書き`（手入力よりスキャンを優先）
 
 ## デプロイ
 

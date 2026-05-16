@@ -561,6 +561,19 @@ a:hover { text-decoration: underline; }
   font-size: 14px;
 }
 
+.proc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.proc-scan-info {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
 .proc-items {
   display: flex;
   flex-direction: column;
